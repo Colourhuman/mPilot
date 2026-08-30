@@ -1,1504 +1,619 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-/* =========================================================
-   mPilot — single-file App.jsx
-   ========================================================= */
+/*
+  mPilot - reference shell
+  Single-file App.jsx as requested.
+  The visual language follows the supplied screenshots:
+  compact EFB chrome, Flight Folder, chart/map workspace,
+  blue route accents, white/black day-night themes.
+*/
 
-const Icon = ({ name, size = 21, strokeWidth = 1.8 }) => {
-  const common = {
-    width: size,
-    height: size,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    "aria-hidden": true,
-  };
+const AirportIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M12 6.6 13.8 11l4.1 1.5-4.1 1.1L12 18l-1.8-4.4-4.1-1.1 4.1-1.5L12 6.6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+  </svg>
+);
 
-  switch (name) {
-    case "menu":
-      return (
-        <svg {...common}>
-          <path d="M4 6h16" />
-          <path d="M4 12h16" />
-          <path d="M4 18h16" />
-        </svg>
-      );
+const RouteIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="5.5" cy="18" r="2.3" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="18.5" cy="6" r="2.3" stroke="currentColor" strokeWidth="1.8" />
+    <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+    <path d="M7.5 16.2 10.3 13.5M13.7 10.7l3.1-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
 
-    case "more":
-      return (
-        <svg {...common}>
-          <circle cx="5" cy="12" r="1" fill="currentColor" />
-          <circle cx="12" cy="12" r="1" fill="currentColor" />
-          <circle cx="19" cy="12" r="1" fill="currentColor" />
-        </svg>
-      );
+const DocumentIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M6 3.5h9l3 3v14H6z" stroke="currentColor" strokeWidth="1.7" />
+    <path d="M15 3.5v4h4M9 11h6M9 15h6M9 18h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
 
-    case "pin":
-      return (
-        <svg {...common}>
-          <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" />
-          <circle cx="12" cy="10" r="2.2" />
-        </svg>
-      );
+const NotesIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M5 4.5h14v15H5z" stroke="currentColor" strokeWidth="1.7" />
+    <path d="M8.5 9h7M8.5 12.5h7M8.5 16h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
 
-    case "route":
-      return (
-        <svg {...common}>
-          <circle cx="6" cy="18" r="2.3" />
-          <circle cx="18" cy="6" r="2.3" />
-          <path d="M7.7 16.3 16.3 7.7" />
-          <path d="M9.5 14.5 14.5 9.5" />
-        </svg>
-      );
+const SearchIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.8" />
+    <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
 
-    case "document":
-      return (
-        <svg {...common}>
-          <path d="M6 3h9l3 3v15H6z" />
-          <path d="M15 3v4h4" />
-          <path d="M9 12h6" />
-          <path d="M9 16h5" />
-        </svg>
-      );
+const LayersIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="m12 3 9 5-9 5-9-5 9-5Z" stroke="currentColor" strokeWidth="1.7" />
+    <path d="m3 12 9 5 9-5M3 16l9 5 9-5" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+);
 
-    case "notes":
-      return (
-        <svg {...common}>
-          <path d="M5 4h14v16H5z" />
-          <path d="M8 8h8" />
-          <path d="M8 12h8" />
-          <path d="M8 16h5" />
-        </svg>
-      );
+const TargetIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.7" />
+    <circle cx="12" cy="12" r="2.8" stroke="currentColor" strokeWidth="1.7" />
+    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
 
-    case "plus":
-      return (
-        <svg {...common}>
-          <path d="M12 5v14" />
-          <path d="M5 12h14" />
-        </svg>
-      );
+const PencilIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="m4 20 1.1-4 9.9-9.9 2.9 2.9-9.9 9.9L4 20Z" stroke="currentColor" strokeWidth="1.7" />
+    <path d="m14.8 7.2 2.9 2.9M18.3 4.7a2 2 0 0 1 2.8 2.8l-1.5 1.5-2.8-2.8 1.5-1.5Z" stroke="currentColor" strokeWidth="1.7" />
+  </svg>
+);
 
-    case "search":
-      return (
-        <svg {...common}>
-          <circle cx="10.8" cy="10.8" r="6.8" />
-          <path d="m16 16 4.2 4.2" />
-        </svg>
-      );
+const MoreIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="5" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.2" fill="currentColor" />
+  </svg>
+);
 
-    case "layers":
-      return (
-        <svg {...common}>
-          <path d="m12 3 9 5-9 5-9-5 9-5Z" />
-          <path d="m3 12 9 5 9-5" />
-          <path d="m3 16 9 5 9-5" />
-        </svg>
-      );
+const MenuIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
 
-    case "target":
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="7" />
-          <circle cx="12" cy="12" r="2.5" />
-          <path d="M12 2v3" />
-          <path d="M12 19v3" />
-          <path d="M2 12h3" />
-          <path d="M19 12h3" />
-        </svg>
-      );
+const MoonIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M19.8 14.8A8.4 8.4 0 0 1 9.2 4.2 8.5 8.5 0 1 0 19.8 14.8Z" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+);
 
-    case "pencil":
-      return (
-        <svg {...common}>
-          <path d="m4 20 4.2-1 9.7-9.7a2.1 2.1 0 0 0-3-3L5.2 16 4 20Z" />
-          <path d="m13.8 7.2 3 3" />
-        </svg>
-      );
+const SunIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7" />
+    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
 
-    case "calendar":
-      return (
-        <svg {...common}>
-          <rect x="4" y="5" width="16" height="15" rx="1.5" />
-          <path d="M8 3v4" />
-          <path d="M16 3v4" />
-          <path d="M4 9h16" />
-        </svg>
-      );
-
-    case "help":
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M9.7 9a2.5 2.5 0 1 1 4.1 1.9c-1.2 1-1.8 1.3-1.8 2.6" />
-          <circle cx="12" cy="16.8" r=".7" fill="currentColor" />
-        </svg>
-      );
-
-    case "sun":
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="3.8" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="m4.9 4.9 1.4 1.4" />
-          <path d="m17.7 17.7 1.4 1.4" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="m4.9 19.1 1.4-1.4" />
-          <path d="m17.7 6.3 1.4-1.4" />
-        </svg>
-      );
-
-    case "moon":
-      return (
-        <svg {...common}>
-          <path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" />
-        </svg>
-      );
-
-    case "settings":
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-2.5v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H4v-2.5h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1L7.1 7l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V5h2.5v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v2.5h-.1a1.7 1.7 0 0 0-1.6 1Z" />
-        </svg>
-      );
-
-    case "plane":
-      return (
-        <svg {...common}>
-          <path d="M2 12h20" />
-          <path d="m13 12 5.5 7H15l-3-5-3 5H5.5L11 12" />
-          <path d="m11 12-3-7h3l1 4 1-4h3l-3 7" />
-        </svg>
-      );
-
-    case "share":
-      return (
-        <svg {...common}>
-          <circle cx="18" cy="5" r="2.2" />
-          <circle cx="6" cy="12" r="2.2" />
-          <circle cx="18" cy="19" r="2.2" />
-          <path d="m8 11 7.8-4.5" />
-          <path d="m8 13 7.8 4.5" />
-        </svg>
-      );
-
-    case "save":
-      return (
-        <svg {...common}>
-          <path d="M5 4h12l2 2v14H5z" />
-          <path d="M8 4v5h8V4" />
-          <circle cx="12" cy="16" r="2.5" />
-        </svg>
-      );
-
-    case "trash":
-      return (
-        <svg {...common}>
-          <path d="M5 7h14" />
-          <path d="M9 7V4h6v3" />
-          <path d="m7 7 1 13h8l1-13" />
-          <path d="M10 11v5" />
-          <path d="M14 11v5" />
-        </svg>
-      );
-
-    case "back":
-      return (
-        <svg {...common}>
-          <path d="m15 18-6-6 6-6" />
-        </svg>
-      );
-
-    case "airport":
-      return (
-        <svg {...common}>
-          <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" />
-          <path d="m12 7 2.5 5.2L19 14l-7 1.2L5 14l4.5-1.8L12 7Z" />
-        </svg>
-      );
-
-    case "weather":
-      return (
-        <svg {...common}>
-          <path d="M7 18h10a4 4 0 0 0 .4-8 5.5 5.5 0 0 0-10.7 1A3.5 3.5 0 0 0 7 18Z" />
-        </svg>
-      );
-
-    case "warning":
-      return (
-        <svg {...common}>
-          <path d="m12 3 9 17H3L12 3Z" />
-          <path d="M12 9v5" />
-          <circle cx="12" cy="17" r=".7" fill="currentColor" />
-        </svg>
-      );
-
-    case "briefing":
-      return (
-        <svg {...common}>
-          <rect x="5" y="4" width="14" height="17" rx="1.5" />
-          <path d="M9 4V2h6v2" />
-          <path d="M8 9h8" />
-          <path d="M8 13h8" />
-          <path d="M8 17h5" />
-        </svg>
-      );
-
-    case "scratch":
-      return (
-        <svg {...common}>
-          <path d="m5 19 1-4 10-10 3 3L9 18l-4 1Z" />
-          <path d="m14 6 3 3" />
-        </svg>
-      );
-
-    default:
-      return null;
-  }
-};
-
-/* =========================================================
-   MAP
-   ========================================================= */
-
-function MapView({ dark }) {
-  const cities = [
-    ["LONDON", "12%", "27%"],
-    ["PARIS", "35%", "54%"],
-    ["BERLIN", "74%", "28%"],
-    ["MÜNCHEN", "79%", "67%"],
-    ["ZÜRICH", "56%", "76%"],
-  ];
-
+function TopBar({ dark, setDark, onMenu }) {
   return (
-    <div className={`map ${dark ? "map-dark" : "map-light"}`}>
-      <div className="map-grid" />
-
-      <div className="fir fir-one">LANGEN FIR<br />EDGG</div>
-      <div className="fir fir-two">BREMEN FIR<br />EDWW</div>
-      <div className="fir fir-three">KARLSRUHE FIR<br />EDUU</div>
-      <div className="fir fir-four">REIMS FIR<br />LFFF</div>
-      <div className="fir fir-five">MÜNCHEN FIR<br />EDMM</div>
-
-      {cities.map(([name, left, top]) => (
-        <div
-          key={name}
-          className="city"
-          style={{ left, top }}
-        >
-          {name}
-        </div>
-      ))}
-
-      <svg
-        className="route-map"
-        viewBox="0 0 1200 800"
-        preserveAspectRatio="none"
-      >
-        <path
-          className="fir-line"
-          d="M80 120 L340 85 L520 170 L720 130 L1010 260 L1120 470"
-        />
-
-        <path
-          className="route-shadow"
-          d="M205 180 L375 295 L505 400 L635 510 L770 630 L890 700"
-        />
-
-        <path
-          className="route-path"
-          d="M205 180 L375 295 L505 400 L635 510 L770 630 L890 700"
-        />
-
-        <circle className="route-node airport-node" cx="205" cy="180" r="13" />
-        <circle className="route-node" cx="375" cy="295" r="6" />
-        <circle className="route-node" cx="505" cy="400" r="6" />
-        <circle className="route-node" cx="635" cy="510" r="6" />
-        <circle className="route-node" cx="770" cy="630" r="6" />
-        <circle className="route-node airport-node" cx="890" cy="700" r="13" />
-      </svg>
-
-      <div className="map-airport-label eddl-label">
-        <strong>EDDL</strong>
-      </div>
-
-      <div className="map-airport-label lszh-label">
-        <strong>LSZH</strong>
-      </div>
-
-      <div className="waypoint-label norku">NORKU</div>
-      <div className="waypoint-label badli">BADLI</div>
-      <div className="waypoint-label pesux">PESUX</div>
-      <div className="waypoint-label sulus">SULUS</div>
-      <div className="waypoint-label rilax">RILAX</div>
-
-      <div className="map-controls">
-        <button>
-          <Icon name="search" size={21} />
+    <header className="mp-topbar">
+      <div className="mp-top-left">
+        <button className="mp-icon-btn" onClick={onMenu} aria-label="Flight Folder">
+          <MenuIcon />
         </button>
-        <button>
-          <Icon name="target" size={21} />
-        </button>
-        <button>
-          <Icon name="layers" size={21} />
-        </button>
-        <button>
-          <Icon name="pin" size={21} />
-        </button>
-        <button>
-          <Icon name="pencil" size={21} />
-        </button>
+        <div className="mp-cycle">
+          <div>Cycle: 2208: 11 Aug - 7 Sep</div>
+          <span>Route not saved</span>
+        </div>
       </div>
 
-      <div className="map-scale">
-        <span>0</span>
-        <div className="scale-line">
-          <i />
-          <i />
-          <i />
-        </div>
-        <span>50</span>
-        <span>100 NM</span>
+      <div className="mp-top-center">
+        <span className="mp-top-symbol">◷</span>
+        <span>00:00</span>
       </div>
 
-      <div className="low-high">
-        <button className="active">LOW</button>
-        <button>HIGH</button>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   FLIGHT FOLDER
-   ========================================================= */
-
-function FlightFolder({
-  dark,
-  setDark,
-  menuOpen,
-  setMenuOpen,
-  activeSection,
-  setActiveSection,
-}) {
-  const sections = [
-    {
-      id: "departure",
-      icon: "pin",
-      title: "EDDL",
-      subtitle: "Düsseldorf · DUS",
-    },
-    {
-      id: "route",
-      icon: "route",
-      title: "Route",
-      subtitle: "659 NM",
-    },
-    {
-      id: "destination",
-      icon: "pin",
-      title: "LSZH",
-      subtitle: "Zürich · ZRH",
-    },
-  ];
-
-  return (
-    <aside className="flight-folder">
-      <div className="folder-header">
-        <span>Flight Folder</span>
-
-        <button
-          className="folder-more"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <Icon name="more" size={19} />
+      <div className="mp-top-right">
+        <button className="mp-icon-btn" aria-label="Time">
+          <span className="tiny-sun">◉</span>
         </button>
-
-        {menuOpen && (
-          <div className="folder-menu">
-            <button>
-              <Icon name="share" size={18} />
-              <span>Share</span>
-            </button>
-
-            <button>
-              <Icon name="save" size={18} />
-              <span>Save</span>
-            </button>
-
-            <button>
-              <Icon name="trash" size={18} />
-              <span>Delete</span>
-            </button>
-
-            <button>
-              <Icon name="plus" size={18} />
-              <span>New Flight</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      <button className="new-flight-button">
-        <Icon name="plus" size={18} />
-        <span>New Flight</span>
-      </button>
-
-      {sections.map((section) => (
-        <button
-          key={section.id}
-          className={`flight-row ${
-            activeSection === section.id ? "active" : ""
-          }`}
-          onClick={() => setActiveSection(section.id)}
-        >
-          <div className="flight-row-icon">
-            <Icon name={section.icon} size={21} />
-          </div>
-
-          <div className="flight-row-text">
-            <strong>{section.title}</strong>
-            <small>{section.subtitle}</small>
-          </div>
-
-          <span className="row-arrow">›</span>
+        <button className="mp-icon-btn" aria-label="Help">
+          <span className="help-symbol">?</span>
         </button>
-      ))}
-
-      <button
-        className={`flight-row ${
-          activeSection === "alternate" ? "active" : ""
-        }`}
-        onClick={() => setActiveSection("alternate")}
-      >
-        <div className="flight-row-icon">
-          <Icon name="pin" size={20} />
-        </div>
-
-        <div className="flight-row-text">
-          <strong>Add Alternate</strong>
-        </div>
-
-        <span className="row-arrow">›</span>
-      </button>
-
-      <div className="folder-divider" />
-
-      <button
-        className={`flight-row ${
-          activeSection === "documents" ? "active" : ""
-        }`}
-        onClick={() => setActiveSection("documents")}
-      >
-        <div className="flight-row-icon">
-          <Icon name="document" size={20} />
-        </div>
-
-        <div className="flight-row-text">
-          <strong>Documents</strong>
-        </div>
-
-        <span className="row-arrow">›</span>
-      </button>
-
-      <button
-        className={`flight-row ${
-          activeSection === "notes" ? "active" : ""
-        }`}
-        onClick={() => setActiveSection("notes")}
-      >
-        <div className="flight-row-icon">
-          <Icon name="pin" size={20} />
-        </div>
-
-        <div className="flight-row-text">
-          <strong>Route Notes</strong>
-        </div>
-
-        <span className="row-arrow">›</span>
-      </button>
-
-      <div className="folder-spacer" />
-
-      <div className="folder-validity">
-        <span>Validity</span>
-        <strong>Up to date</strong>
-      </div>
-
-      <div className="folder-ready">
-        <span className="ready-dot" />
-        <span>Ready</span>
-      </div>
-    </aside>
-  );
-}
-
-/* =========================================================
-   TOP BAR
-   ========================================================= */
-
-function TopBar({ dark, setDark, setFolderOpen }) {
-  return (
-    <header className="top-bar">
-      <button
-        className="top-menu"
-        onClick={() => setFolderOpen((value) => !value)}
-      >
-        <Icon name="menu" size={22} />
-      </button>
-
-      <div className="cycle-info">
-        <strong>Cycle 1807</strong>
-        <span />
-        <span>Route not saved</span>
-      </div>
-
-      <div className="top-center">
-        <Icon name="calendar" size={18} />
-        <strong>00:00</strong>
-      </div>
-
-      <div className="top-right">
-        <button>
-          <Icon name="help" size={20} />
+        <button className="mp-icon-btn" onClick={() => setDark((v) => !v)} aria-label="Day night">
+          {dark ? <SunIcon /> : <MoonIcon />}
         </button>
-
-        <button onClick={() => setDark(!dark)}>
-          <Icon name={dark ? "sun" : "moon"} size={20} />
-        </button>
-
-        <div className="profile">
-          <span>default</span>
-          <i />
-        </div>
+        <span className="mp-default">default</span>
+        <span className="mp-status-dot" />
       </div>
     </header>
   );
 }
 
-/* =========================================================
-   BOTTOM NAVIGATION
-   ========================================================= */
+function FlightFolder({ active, setActive, menuOpen, setMenuOpen }) {
+  return (
+    <aside className="mp-folder">
+      <div className="mp-folder-head">
+        <span>Flight Folder</span>
+        <button className="mp-more-btn" onClick={() => setMenuOpen((v) => !v)}>
+          <MoreIcon />
+        </button>
 
-function BottomNavigation({ activeNav, setActiveNav }) {
-  const nav = [
-    ["route", "Route"],
-    ["airport", "Airports"],
-    ["document", "Charts"],
-    ["warning", "NOTAMs"],
-    ["weather", "Weather"],
-    ["briefing", "Briefing"],
-    ["scratch", "Scratchpads"],
-    ["settings", "Settings"],
-    ["more", "More"],
+        {menuOpen && (
+          <div className="mp-folder-menu">
+            <button><span className="menu-glyph">↗</span><span>Share</span></button>
+            <button><span className="menu-glyph">▣</span><span>Save</span></button>
+            <button><span className="menu-glyph">⌫</span><span>Delete</span></button>
+            <button><span className="menu-glyph">＋</span><span>New Flight</span></button>
+          </div>
+        )}
+      </div>
+
+      <button className="mp-edit-flight">Edit Flight</button>
+
+      <button
+        className={`mp-flight-row ${active === "departure" ? "selected" : ""}`}
+        onClick={() => setActive("departure")}
+      >
+        <div className="mp-row-icon"><AirportIcon /></div>
+        <div className="mp-row-content">
+          <strong>EDDL</strong>
+          <span>Düsseldorf · DUS</span>
+        </div>
+        <span className="mp-chevron">›</span>
+      </button>
+
+      <button
+        className={`mp-flight-row ${active === "route" ? "selected" : ""}`}
+        onClick={() => setActive("route")}
+      >
+        <div className="mp-row-icon route-color"><RouteIcon /></div>
+        <div className="mp-row-content">
+          <strong>Route</strong>
+          <span>659 NM</span>
+        </div>
+        <span className="mp-chevron">›</span>
+      </button>
+
+      <button
+        className={`mp-flight-row ${active === "destination" ? "selected" : ""}`}
+        onClick={() => setActive("destination")}
+      >
+        <div className="mp-row-icon"><AirportIcon /></div>
+        <div className="mp-row-content">
+          <strong>LSZH</strong>
+          <span>Zürich · ZRH</span>
+        </div>
+        <span className="mp-chevron">›</span>
+      </button>
+
+      <button className="mp-alternate-btn">Add Alternate</button>
+
+      <div className="mp-section-separator" />
+
+      <button
+        className={`mp-content-row ${active === "documents" ? "selected" : ""}`}
+        onClick={() => setActive("documents")}
+      >
+        <DocumentIcon />
+        <span>Documents</span>
+        <span className="mp-chevron">›</span>
+      </button>
+
+      <button
+        className={`mp-content-row ${active === "notes" ? "selected" : ""}`}
+        onClick={() => setActive("notes")}
+      >
+        <NotesIcon />
+        <span>Route Notes</span>
+        <span className="mp-chevron">›</span>
+      </button>
+
+      <div className="mp-folder-spacer" />
+
+      <div className="mp-low-high">
+        <button className="active">Low</button>
+        <button>High</button>
+      </div>
+    </aside>
+  );
+}
+
+function RouteMap({ dark }) {
+  return (
+    <section className={`mp-map ${dark ? "dark" : "light"}`}>
+      <div className="mp-map-land land-a" />
+      <div className="mp-map-land land-b" />
+      <div className="mp-map-land land-c" />
+      <div className="mp-map-water water-a" />
+      <div className="mp-map-water water-b" />
+
+      <svg className="mp-map-svg" viewBox="0 0 1400 900" preserveAspectRatio="none">
+        <path className="airspace airspace-a" d="M50 170 C220 90 360 130 490 60 C690 -20 840 80 1030 110 C1190 140 1320 250 1390 350" />
+        <path className="airspace airspace-b" d="M0 610 C170 560 260 610 410 560 C590 500 680 575 820 540 C1030 480 1170 560 1400 500" />
+        <path className="airspace airspace-c" d="M180 860 C330 740 430 765 545 710 C690 640 810 720 960 690 C1110 660 1280 700 1410 640" />
+
+        <path className="route-shadow" d="M210 210 C335 245 450 315 545 380 C655 454 735 555 830 645 C905 715 980 755 1065 790" />
+        <path className="route-main" d="M210 210 C335 245 450 315 545 380 C655 454 735 555 830 645 C905 715 980 755 1065 790" />
+
+        <circle className="route-node airport" cx="210" cy="210" r="10" />
+        <circle className="route-node" cx="335" cy="245" r="5.5" />
+        <circle className="route-node" cx="450" cy="315" r="5.5" />
+        <circle className="route-node" cx="545" cy="380" r="5.5" />
+        <circle className="route-node" cx="655" cy="454" r="5.5" />
+        <circle className="route-node" cx="735" cy="555" r="5.5" />
+        <circle className="route-node" cx="830" cy="645" r="5.5" />
+        <circle className="route-node" cx="905" cy="715" r="5.5" />
+        <circle className="route-node airport" cx="1065" cy="790" r="10" />
+      </svg>
+
+      <div className="mp-fir fir-1">LANGEN FIR<br /><span>EDGG</span></div>
+      <div className="mp-fir fir-2">BREMEN FIR<br /><span>EDWW</span></div>
+      <div className="mp-fir fir-3">REIMS FIR<br /><span>LFFF</span></div>
+      <div className="mp-fir fir-4">MÜNCHEN FIR<br /><span>EDMM</span></div>
+
+      <div className="mp-city city-a">Düsseldorf</div>
+      <div className="mp-city city-b">Frankfurt</div>
+      <div className="mp-city city-c">Stuttgart</div>
+      <div className="mp-city city-d">München</div>
+      <div className="mp-city city-e">Zürich</div>
+      <div className="mp-city city-f">Bern</div>
+
+      <div className="mp-airport-tag departure-tag">
+        <AirportIcon size={25} />
+        <div><strong>EDDL</strong><span>Düsseldorf · DUS</span></div>
+      </div>
+
+      <div className="mp-airport-tag arrival-tag">
+        <AirportIcon size={25} />
+        <div><strong>LSZH</strong><span>Zürich · ZRH</span></div>
+      </div>
+
+      <div className="mp-wpt wpt-a">NORKU</div>
+      <div className="mp-wpt wpt-b">BADLI</div>
+      <div className="mp-wpt wpt-c">PESUX</div>
+      <div className="mp-wpt wpt-d">SULUS</div>
+      <div className="mp-wpt wpt-e">RILAX</div>
+      <div className="mp-wpt wpt-f">METAL</div>
+
+      <div className="mp-map-controls">
+        <button><SearchIcon /></button>
+        <button><TargetIcon /></button>
+        <button><LayersIcon /></button>
+        <button><AirportIcon /></button>
+        <button><PencilIcon /></button>
+      </div>
+
+      <div className="mp-map-scale">
+        <span>0</span>
+        <div><i /><i /></div>
+        <span>50</span>
+        <span>100 NM</span>
+      </div>
+    </section>
+  );
+}
+
+function ChartView({ dark }) {
+  return (
+    <section className={`mp-chart-view ${dark ? "dark" : "light"}`}>
+      <div className="mp-chart-sidebar">
+        <div className="mp-chart-airport">
+          <div className="small-title">EDDF</div>
+          <div className="small-sub">Frankfurt · FRA</div>
+        </div>
+
+        <div className="mp-filter-row">
+          <button className="active">APT info</button>
+          <button>APT WX</button>
+        </div>
+        <div className="mp-filter-row second">
+          <button>Clipboard</button>
+          <button>All Charts</button>
+        </div>
+
+        <button className="show-filters">Show Filters</button>
+
+        <div className="chart-side-title">General</div>
+        <div className="chart-side-title ground">Ground Charts</div>
+
+        {[
+          ["EDDF Taxi", false],
+          ["EDDF AOC", false],
+          ["Taxiway Information", true],
+          ["Stand Coordinates", false],
+        ].map(([text, selected]) => (
+          <button key={text} className={`chart-side-item ${selected ? "selected" : ""}`}>
+            <span>{text}</span>
+            <span className="chart-bookmark">{selected ? "▮" : ""}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mp-chart-main">
+        <div className="mp-chart-paper">
+          <div className="chart-heading">FRANKFURT / MAIN — EDDF</div>
+          <div className="chart-edition">AD 2 EDDF · GROUND MOVEMENT CHART</div>
+
+          <div className="runway-diagonal r1"><span>07C / 25C</span></div>
+          <div className="runway-diagonal r2"><span>07R / 25L</span></div>
+          <div className="runway-horizontal"><span>07L / 25R</span></div>
+
+          {[
+            [18, 18, "A1"], [24, 70, "A6"], [31, 42, "B3"], [41, 78, "C2"],
+            [52, 28, "D1"], [61, 58, "E4"], [68, 82, "F5"], [75, 40, "G2"],
+          ].map(([top, left, label]) => (
+            <div className="stand-box" style={{ top: `${top}%`, left: `${left}%` }} key={label}>{label}</div>
+          ))}
+
+          <div className="chart-note n-a">ACFT STANDS</div>
+          <div className="chart-note n-b">TWY A</div>
+          <div className="chart-note n-c">TWY B</div>
+          <div className="chart-note n-d">APRON</div>
+
+          <div className="chart-north">N</div>
+          <div className="chart-footer">© aeronautical chart representation · training/demo</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function NotesView({ dark }) {
+  const notes = [
+    ["N49 7.59 E4 39.92", ""],
+    ["N61 15.22 W44 18.73", ""],
+    ["N42 43.47 W71 19.51", "Listen to KJFK ATIS: 114.5"],
   ];
 
   return (
-    <div className="bottom-navigation">
-      <button className="bottom-back">
-        <Icon name="back" size={25} />
-      </button>
-
-      <div className="bottom-location">
-        <strong>EDDL</strong>
+    <section className={`mp-notes-view ${dark ? "dark" : "light"}`}>
+      <div className="mp-notes-sidebar">
+        <div className="notes-top">
+          <button className="back-link">‹ BACK</button>
+          <strong>Notes</strong>
+        </div>
+        {notes.map(([title, sub], idx) => (
+          <div className="note-entry" key={title}>
+            <span className="note-pin">◆</span>
+            <div>
+              <strong>{title}</strong>
+              {sub ? <small>{sub}</small> : null}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="bottom-nav-items">
-        {nav.map(([icon, label]) => (
-          <button
-            key={label}
-            className={activeNav === label ? "selected" : ""}
-            onClick={() => setActiveNav(label)}
-          >
-            <Icon name={icon} size={21} />
+      <RouteMap dark={dark} />
+
+      <div className="note-popup">
+        <div className="popup-title">N42 43.47 W71 19.51</div>
+        <div className="popup-body">
+          <strong>Listen to KJFK ATIS:</strong><br />
+          Freq. 114.5
+        </div>
+        <button>DELETE</button>
+      </div>
+    </section>
+  );
+}
+
+function BottomNav({ active, setActive }) {
+  const items = [
+    ["route", "Route", RouteIcon],
+    ["airports", "Airports", AirportIcon],
+    ["charts", "Charts", DocumentIcon],
+    ["notams", "NOTAMs", ({ size }) => <span style={{ fontSize: size }}>⚠</span>],
+    ["weather", "Weather", ({ size }) => <span style={{ fontSize: size }}>☁</span>],
+    ["briefing", "Briefing", DocumentIcon],
+    ["scratchpads", "Scratchpads", NotesIcon],
+    ["settings", "Settings", ({ size }) => <span style={{ fontSize: size }}>⚙</span>],
+    ["more", "More", MoreIcon],
+  ];
+
+  return (
+    <nav className="mp-bottom">
+      <button className="mp-bottom-back">‹</button>
+      <div className="mp-bottom-location">EDDL</div>
+      <div className="mp-bottom-items">
+        {items.map(([id, label, Comp]) => (
+          <button key={id} className={active === id ? "active" : ""} onClick={() => setActive(id)}>
+            <Comp size={20} />
             <span>{label}</span>
           </button>
         ))}
       </div>
-    </div>
+    </nav>
   );
 }
-
-/* =========================================================
-   MAIN APP
-   ========================================================= */
 
 export default function App() {
   const [dark, setDark] = useState(true);
   const [folderOpen, setFolderOpen] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [folderMenu, setFolderMenu] = useState(false);
   const [activeSection, setActiveSection] = useState("route");
-  const [activeNav, setActiveNav] = useState("Route");
+  const [activeNav, setActiveNav] = useState("route");
+  const [screen, setScreen] = useState("route");
+
+  useEffect(() => {
+    if (activeNav === "charts") setScreen("charts");
+    else if (activeNav === "route" || activeNav === "airports") setScreen("route");
+    else if (activeNav === "scratchpads") setScreen("notes");
+  }, [activeNav]);
+
+  useEffect(() => {
+    if (activeSection === "documents") {
+      setScreen("charts");
+      setActiveNav("charts");
+    } else if (activeSection === "notes") {
+      setScreen("notes");
+      setActiveNav("scratchpads");
+    } else if (activeSection === "route") {
+      setScreen("route");
+      setActiveNav("route");
+    }
+  }, [activeSection]);
 
   return (
-    <div className={`mpilot ${dark ? "theme-dark" : "theme-light"}`}>
+    <div className={`mpilot-app ${dark ? "theme-dark" : "theme-light"}`}>
+      <style>{styles}</style>
+
       <TopBar
         dark={dark}
         setDark={setDark}
-        setFolderOpen={setFolderOpen}
+        onMenu={() => setFolderOpen((v) => !v)}
       />
 
-      <div className="main-area">
+      <div className="mp-body">
         {folderOpen && (
           <FlightFolder
-            dark={dark}
-            setDark={setDark}
-            menuOpen={menuOpen}
-            setMenuOpen={setMenuOpen}
-            activeSection={activeSection}
-            setActiveSection={setActiveSection}
+            active={activeSection}
+            setActive={setActiveSection}
+            menuOpen={folderMenu}
+            setMenuOpen={setFolderMenu}
           />
         )}
 
-        <main className="map-area">
-          <MapView dark={dark} />
-
-          <div className="route-status">
-            <span className="status-document">
-              <Icon name="document" size={17} />
-            </span>
-            <span>No flight loaded</span>
-          </div>
-        </main>
+        <div className="mp-content">
+          {screen === "charts" ? <ChartView dark={dark} /> : null}
+          {screen === "notes" ? <NotesView dark={dark} /> : null}
+          {screen === "route" ? <RouteMap dark={dark} /> : null}
+        </div>
       </div>
 
-      <BottomNavigation
-        activeNav={activeNav}
-        setActiveNav={setActiveNav}
-      />
+      <BottomNav active={activeNav} setActive={setActiveNav} />
     </div>
   );
 }
 
-/* =========================================================
-   STYLES
-   ========================================================= */
+const styles = `
+* { box-sizing: border-box; }
+html, body, #root { width:100%; height:100%; margin:0; overflow:hidden; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+button { font:inherit; }
 
-const style = document.createElement("style");
-
-style.textContent = `
-* {
-  box-sizing: border-box;
+.mpilot-app {
+  width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden;
+  --bg:#f3f3f2; --panel:#f8f8f7; --panel2:#ececea; --border:#d0d0cc;
+  --text:#1d2225; --muted:#777c7e; --route:#38a4df; --green:#5ba27b;
+  background:var(--bg); color:var(--text);
 }
-
-html,
-body,
-#root {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-}
-
-button {
-  font-family: inherit;
-}
-
-button:focus {
-  outline: none;
-}
-
-.mpilot {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* =========================================================
-   THEMES
-   ========================================================= */
-
 .theme-dark {
-  --background: #111518;
-  --panel: #151b20;
-  --panel-2: #1a2025;
-  --panel-3: #20272c;
-  --border: #30383e;
-  --text: #f2f4f5;
-  --muted: #9ba4aa;
-  --soft: #727d84;
-  --route: #3aa9ed;
-  --route-light: #72c6f5;
-  --map-grid: rgba(255,255,255,.065);
-  --map-country: rgba(113, 171, 133, .35);
-  --bottom: #101418;
-}
-
-.theme-light {
-  --background: #e7e7e5;
-  --panel: #f8f8f7;
-  --panel-2: #eeeeec;
-  --panel-3: #e4e4e1;
-  --border: #d1d1ce;
-  --text: #181a1c;
-  --muted: #707477;
-  --soft: #929598;
-  --route: #2d9ddd;
-  --route-light: #58b7e8;
-  --map-grid: rgba(0,0,0,.08);
-  --map-country: rgba(57, 119, 78, .42);
-  --bottom: #fafafa;
-}
-
-/* =========================================================
-   TOP
-   ========================================================= */
-
-.top-bar {
-  height: 48px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  background: var(--panel);
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  z-index: 50;
-}
-
-.top-menu {
-  width: 48px;
-  height: 48px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.cycle-info {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-}
-
-.cycle-info strong {
-  font-weight: 500;
-}
-
-.cycle-info span:first-of-type {
-  width: 1px;
-  height: 16px;
-  background: var(--border);
-}
-
-.cycle-info span:last-of-type {
-  color: var(--muted);
-}
-
-.top-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--text);
-  font-size: 12px;
-}
-
-.top-center svg {
-  color: var(--muted);
-}
-
-.top-right {
-  margin-left: auto;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding-right: 12px;
-}
-
-.top-right > button {
-  width: 34px;
-  height: 34px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 5px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.profile i {
-  width: 7px;
-  height: 7px;
-  background: #42bb73;
-  border-radius: 50%;
-}
-
-/* =========================================================
-   MAIN
-   ========================================================= */
-
-.main-area {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  position: relative;
-}
-
-/* =========================================================
-   FLIGHT FOLDER
-   ========================================================= */
-
-.flight-folder {
-  width: 270px;
-  min-width: 270px;
-  height: 100%;
-  background: var(--panel);
-  color: var(--text);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 40;
-}
-
-.folder-header {
-  height: 48px;
-  padding: 0 9px 0 5px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  font-weight: 600;
-  position: relative;
-}
-
-.folder-more {
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.folder-menu {
-  position: absolute;
-  top: 40px;
-  right: -115px;
-  width: 160px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 25px rgba(0,0,0,.25);
-  z-index: 100;
-}
-
-.folder-menu button {
-  width: 100%;
-  height: 43px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 14px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.folder-menu button:hover {
-  background: var(--panel-2);
-}
-
-.folder-menu button:last-child {
-  border-bottom: 0;
-}
-
-.new-flight-button {
-  margin: 16px 4px 11px;
-  height: 40px;
-  border: 0;
-  border-radius: 3px;
-  background: #35a7df;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 9px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.new-flight-button:hover {
-  background: #49b3e8;
-}
-
-.flight-row {
-  width: 100%;
-  min-height: 72px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  display: grid;
-  grid-template-columns: 30px 1fr 20px;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 10px 8px 10px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.flight-row:hover {
-  background: var(--panel-2);
-}
-
-.flight-row.active {
-  background: var(--panel-2);
-}
-
-.flight-row-icon {
-  display: grid;
-  place-items: center;
-  color: var(--muted);
-}
-
-.flight-row.active .flight-row-icon {
-  color: var(--text);
-}
-
-.flight-row-text strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.flight-row-text small {
-  display: block;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.row-arrow {
-  color: var(--muted);
-  font-size: 24px;
-  line-height: 1;
-  text-align: center;
-}
-
-.folder-divider {
-  height: 12px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel-2);
-}
-
-.folder-spacer {
-  flex: 1;
-}
-
-.folder-validity {
-  height: 32px;
-  padding: 0 7px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 10px;
-  color: var(--muted);
-}
-
-.folder-validity strong {
-  color: #49ba78;
-  font-weight: 500;
-}
-
-.folder-ready {
-  height: 25px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-left: 6px;
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.ready-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1px solid #3db876;
-  position: relative;
-}
-
-.ready-dot::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  background: #3db876;
-  border-radius: 50%;
-}
-
-/* =========================================================
-   MAP
-   ========================================================= */
-
-.map-area {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.map {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.map-dark {
-  background:
-    radial-gradient(circle at 50% 45%, rgba(53,75,84,.18), transparent 42%),
-    #20272b;
-}
-
-.map-light {
-  background:
-    radial-gradient(circle at 50% 45%, rgba(255,255,255,.7), transparent 42%),
-    #e6e6e2;
-}
-
-.map-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--map-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--map-grid) 1px, transparent 1px);
-  background-size: 90px 90px;
-}
-
-.fir {
-  position: absolute;
-  color: var(--map-country);
-  font-size: 11px;
-  line-height: 1.5;
-  letter-spacing: .4px;
-  pointer-events: none;
-}
-
-.fir-one {
-  top: 10%;
-  left: 43%;
-}
-
-.fir-two {
-  top: 13%;
-  right: 19%;
-}
-
-.fir-three {
-  top: 42%;
-  right: 18%;
-}
-
-.fir-four {
-  bottom: 30%;
-  left: 19%;
-}
-
-.fir-five {
-  bottom: 18%;
-  right: 11%;
-}
-
-.city {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  color: var(--muted);
-  font-size: 11px;
-  letter-spacing: .5px;
-  opacity: .8;
-}
-
-.route-map {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.fir-line {
-  fill: none;
-  stroke: var(--map-country);
-  stroke-width: 1;
-  stroke-dasharray: 8 5;
-}
-
-.route-shadow {
-  fill: none;
-  stroke: rgba(0,0,0,.38);
-  stroke-width: 7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.route-path {
-  fill: none;
-  stroke: var(--route);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.route-node {
-  fill: var(--panel);
-  stroke: #e7edf0;
-  stroke-width: 2.5;
-}
-
-.airport-node {
-  fill: var(--route);
-  stroke: white;
-  stroke-width: 4;
-}
-
-.map-airport-label {
-  position: absolute;
-  padding: 5px 8px;
-  background: rgba(23,31,35,.92);
-  color: white;
-  border: 1px solid rgba(76,166,219,.7);
-  border-radius: 3px;
-  font-size: 12px;
-  letter-spacing: .3px;
-}
-
-.theme-light .map-airport-label {
-  background: rgba(255,255,255,.94);
-  color: #1d2529;
-  border-color: rgba(48,139,188,.7);
-}
-
-.eddl-label {
-  left: 20%;
-  top: 19%;
-}
-
-.lszh-label {
-  left: 73%;
-  top: 78%;
-}
-
-.waypoint-label {
-  position: absolute;
-  padding: 4px 7px;
-  background: rgba(28,36,40,.9);
-  color: white;
-  border: 1px solid rgba(83,168,215,.6);
-  border-radius: 3px;
-  font-size: 11px;
-}
-
-.theme-light .waypoint-label {
-  background: rgba(255,255,255,.95);
-  color: #20272a;
-}
-
-.norku {
-  left: 34%;
-  top: 34%;
-}
-
-.badli {
-  left: 45%;
-  top: 47%;
-}
-
-.pesux {
-  left: 54%;
-  top: 58%;
-}
-
-.sulus {
-  left: 63%;
-  top: 68%;
-}
-
-.rilax {
-  left: 70%;
-  top: 75%;
-}
-
-.map-controls {
-  position: absolute;
-  right: 13px;
-  top: 14px;
-  width: 38px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.map-controls button {
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--border);
-  background: rgba(25,31,35,.9);
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.theme-light .map-controls button {
-  background: rgba(247,247,245,.94);
-  color: #23282b;
-}
-
-.map-controls button:hover {
-  background: var(--panel-2);
-}
-
-.map-scale {
-  position: absolute;
-  right: 24px;
-  bottom: 14px;
-  display: flex;
-  align-items: flex-end;
-  gap: 7px;
-  color: var(--text);
-  font-size: 10px;
-}
-
-.scale-line {
-  width: 110px;
-  height: 10px;
-  display: flex;
-  border-bottom: 3px solid var(--text);
-}
-
-.scale-line i {
-  flex: 1;
-  border-left: 1px solid var(--text);
-}
-
-.scale-line i:last-child {
-  border-right: 1px solid var(--text);
-}
-
-.low-high {
-  position: absolute;
-  left: 13px;
-  bottom: 13px;
-  display: flex;
-  gap: 1px;
-}
-
-.low-high button {
-  height: 36px;
-  padding: 0 18px;
-  border: 1px solid var(--border);
-  background: var(--panel);
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.low-high button.active {
-  background: var(--panel-3);
-  color: var(--text);
-  border-color: var(--route);
-}
-
-.route-status {
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 25px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 10px;
-  pointer-events: none;
-}
-
-.status-document {
-  display: grid;
-  place-items: center;
-}
-
-/* =========================================================
-   BOTTOM NAV
-   ========================================================= */
-
-.bottom-navigation {
-  height: 76px;
-  flex-shrink: 0;
-  background: var(--bottom);
-  color: var(--text);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: stretch;
-  position: relative;
-  z-index: 50;
-}
-
-.bottom-back {
-  width: 60px;
-  flex-shrink: 0;
-  border: 0;
-  border-right: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.bottom-location {
-  width: 65px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--route);
-  font-size: 13px;
-  border-right: 1px solid var(--border);
-}
-
-.bottom-nav-items {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: stretch;
-  justify-content: space-evenly;
-}
-
-.bottom-nav-items button {
-  min-width: 72px;
-  flex: 1;
-  max-width: 125px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  cursor: pointer;
-  font-size: 10px;
-}
-
-.bottom-nav-items button:hover {
-  color: var(--text);
-}
-
-.bottom-nav-items button.selected {
-  color: var(--text);
-}
-
-.bottom-nav-items button.selected svg {
-  color: var(--route);
-}
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 900px) {
-  .flight-folder {
-    width: 235px;
-    min-width: 235px;
-  }
-
-  .bottom-nav-items button {
-    min-width: 50px;
-    font-size: 9px;
-  }
-
-  .bottom-nav-items button:nth-child(n+7) {
-    display: none;
-  }
-}
-
-@media (max-width: 650px) {
-  .flight-folder {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 100;
-    box-shadow: 8px 0 30px rgba(0,0,0,.3);
-  }
-
-  .cycle-info span:last-of-type {
-    display: none;
-  }
-
-  .top-center {
-    display: none;
-  }
-
-  .bottom-location {
-    display: none;
-  }
-
-  .bottom-navigation {
-    height: 65px;
-  }
-
-  .bottom-nav-items button {
-    min-width: 45px;
-  }
-
-  .bottom-nav-items button span {
-    display: none;
-  }
-
-  .bottom-nav-items button:nth-child(n+7) {
-    display: none;
-  }
-
-  .map-controls {
-    right: 8px;
-  }
-
-  .map-scale {
-    display: none;
-  }
-}
+  --bg:#101417; --panel:#171d22; --panel2:#1d2429; --border:#343c42;
+  --text:#eceff1; --muted:#929ba1; --route:#45abe8; --green:#61ad82;
+}
+
+.mp-topbar {
+  height:52px; flex:0 0 52px; display:flex; align-items:center; position:relative;
+  background:var(--panel); border-bottom:1px solid var(--border); z-index:100;
+}
+.mp-top-left { display:flex; align-items:center; height:100%; }
+.mp-icon-btn,.mp-more-btn,.top-right button { border:0; background:transparent; color:var(--text); cursor:pointer; }
+.mp-icon-btn { width:45px; height:45px; display:grid; place-items:center; }
+.mp-cycle { display:flex; flex-direction:column; justify-content:center; gap:2px; font-size:11px; line-height:1.15; }
+.mp-cycle strong { font-weight:600; }
+.mp-cycle span { color:var(--muted); }
+.mp-top-center { position:absolute; left:50%; transform:translateX(-50%); display:flex; gap:7px; align-items:center; font-size:11px; font-weight:600; }
+.mp-top-symbol { color:var(--muted); font-size:17px; }
+.mp-top-right { margin-left:auto; display:flex; align-items:center; gap:4px; padding-right:10px; }
+.mp-top-right > button { width:34px; height:34px; display:grid; place-items:center; }
+.tiny-sun { color:var(--muted); font-size:15px; }
+.help-symbol { width:17px; height:17px; border:1px solid var(--muted); border-radius:50%; display:grid; place-items:center; font-size:11px; color:var(--muted); }
+.mp-default { font-size:10px; color:var(--muted); margin-left:4px; }
+.mp-status-dot { width:7px; height:7px; border-radius:50%; background:#48b77c; margin-left:2px; }
+
+.mp-body { min-height:0; flex:1; display:flex; }
+
+.mp-folder { width:390px; min-width:390px; height:100%; background:var(--panel); border-right:1px solid var(--border); display:flex; flex-direction:column; position:relative; z-index:80; }
+.mp-folder-head { height:58px; display:flex; align-items:center; justify-content:center; position:relative; border-bottom:1px solid var(--border); font-size:14px; font-weight:600; }
+.mp-more-btn { position:absolute; right:12px; width:34px; height:34px; display:grid; place-items:center; color:var(--muted); }
+.mp-folder-menu { position:absolute; top:49px; right:-145px; width:165px; background:var(--panel); border:1px solid var(--border); box-shadow:0 8px 25px rgba(0,0,0,.27); }
+.mp-folder-menu button { width:100%; height:43px; border:0; border-bottom:1px solid var(--border); background:transparent; color:var(--text); display:flex; align-items:center; gap:12px; padding:0 13px; cursor:pointer; }
+.mp-folder-menu button:hover { background:var(--panel2); }
+.menu-glyph { width:18px; color:var(--muted); text-align:center; }
+.mp-edit-flight { height:42px; margin:14px 20px; border:1px solid var(--border); background:var(--panel2); color:var(--text); font-size:12px; cursor:pointer; }
+.mp-edit-flight:hover { border-color:var(--route); }
+.mp-flight-row { width:100%; min-height:92px; display:grid; grid-template-columns:42px 1fr 25px; align-items:center; gap:11px; padding:10px 21px; border:0; border-top:1px solid var(--border); background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+.mp-flight-row:hover,.mp-flight-row.selected { background:var(--panel2); }
+.mp-row-icon { color:var(--muted); display:grid; place-items:center; }
+.route-color { color:var(--route); }
+.mp-row-content strong { display:block; font-size:16px; line-height:1.1; margin-bottom:6px; }
+.mp-row-content span { display:block; color:var(--muted); font-size:11px; }
+.mp-chevron { color:var(--muted); font-size:25px; line-height:1; }
+.mp-alternate-btn { margin:14px 20px; height:39px; border:1px solid var(--border); background:var(--panel2); color:var(--muted); cursor:pointer; font-size:11px; }
+.mp-alternate-btn:hover { color:var(--text); border-color:var(--route); }
+.mp-section-separator { height:12px; background:var(--panel2); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.mp-content-row { width:100%; min-height:60px; display:grid; grid-template-columns:31px 1fr 25px; align-items:center; gap:9px; padding:0 20px; border:0; border-top:1px solid var(--border); background:transparent; color:var(--text); cursor:pointer; text-align:left; }
+.mp-content-row:hover,.mp-content-row.selected { background:var(--panel2); }
+.mp-content-row svg { color:var(--muted); }
+.mp-content-row span { font-size:13px; font-weight:600; }
+.mp-folder-spacer { flex:1; }
+.mp-low-high { height:46px; display:flex; gap:2px; padding:6px 10px; }
+.mp-low-high button { width:54px; border:1px solid var(--border); background:var(--panel2); color:var(--muted); cursor:pointer; font-size:10px; }
+.mp-low-high .active { color:var(--text); border-color:var(--route); }
+
+.mp-content { flex:1; min-width:0; min-height:0; position:relative; overflow:hidden; }
+
+.mp-map { position:absolute; inset:0; overflow:hidden; background:#e3e8e8; color:var(--text); }
+.mp-map.dark { background:linear-gradient(180deg,#182025,#1f292d); }
+.mp-map.light { background:linear-gradient(180deg,#f0f3f2,#dce4e4); }
+.mp-map::after { content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(70,90,95,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(70,90,95,.13) 1px,transparent 1px); background-size:75px 75px; pointer-events:none; }
+.mp-map.dark::after { background-image:linear-gradient(rgba(190,215,215,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(190,215,215,.045) 1px,transparent 1px); }
+.mp-map-land { position:absolute; border:1px solid rgba(90,135,105,.22); background:rgba(120,145,132,.035); }
+.land-a { width:46%; height:34%; left:-8%; top:8%; border-radius:50%; transform:rotate(-8deg); }
+.land-b { width:52%; height:45%; left:35%; top:-9%; border-radius:46% 54% 38% 62%; transform:rotate(14deg); }
+.land-c { width:41%; height:46%; right:-6%; bottom:-8%; border-radius:50%; transform:rotate(-16deg); }
+.mp-map-water { position:absolute; background:rgba(55,110,145,.16); }
+.water-a { width:16%; height:62%; left:43%; top:25%; border-radius:50%; transform:rotate(9deg); }
+.water-b { width:10%; height:35%; right:11%; bottom:18%; border-radius:50%; }
+.mp-map-svg { position:absolute; inset:0; width:100%; height:100%; }
+.airspace { fill:none; stroke:rgba(90,151,111,.45); stroke-width:1.5; stroke-dasharray:10 6; }
+.route-shadow { fill:none; stroke:rgba(0,0,0,.35); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; }
+.route-main { fill:none; stroke:#2ca6e6; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round; }
+.route-node { fill:var(--panel); stroke:#e8f0f3; stroke-width:2.2; }
+.route-node.airport { fill:#3ca9e8; stroke:#fff; stroke-width:3; }
+.mp-fir { position:absolute; color:rgba(92,151,111,.7); font-size:12px; line-height:1.45; letter-spacing:.3px; pointer-events:none; }
+.mp-fir span { font-style:italic; }
+.fir-1 { top:10%; left:44%; }
+.fir-2 { top:16%; right:19%; }
+.fir-3 { bottom:31%; left:18%; }
+.fir-4 { bottom:15%; right:13%; }
+.mp-city { position:absolute; color:var(--muted); font-size:11px; }
+.city-a { top:27%; left:22%; }.city-b { top:42%; left:48%; }.city-c { top:56%; left:57%; }.city-d { top:70%; right:17%; }.city-e { bottom:17%; left:54%; }.city-f { bottom:23%; left:46%; }
+.mp-airport-tag { position:absolute; display:flex; align-items:center; gap:8px; padding:6px 8px; background:color-mix(in srgb,var(--panel) 90%, transparent); border:1px solid var(--border); box-shadow:0 2px 5px rgba(0,0,0,.13); z-index:12; }
+.mp-airport-tag svg { color:var(--route); flex:none; }
+.mp-airport-tag strong { display:block; font-size:13px; }.mp-airport-tag span { display:block; color:var(--muted); font-size:9px; margin-top:2px; }
+.departure-tag { left:15%; top:19%; }.arrival-tag { left:70%; bottom:15%; }
+.mp-wpt { position:absolute; background:color-mix(in srgb,var(--panel) 88%, transparent); color:var(--text); border:1px solid rgba(63,150,202,.55); padding:4px 7px; font-size:10px; font-weight:700; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+.wpt-a { left:31%; top:29%; }.wpt-b { left:42%; top:39%; }.wpt-c { left:51%; top:49%; }.wpt-d { left:61%; top:59%; }.wpt-e { left:67%; top:68%; }.wpt-f { left:73%; top:76%; }
+.mp-map-controls { position:absolute; top:16px; right:16px; display:flex; flex-direction:column; gap:6px; z-index:30; }
+.mp-map-controls button { width:43px; height:43px; border:1px solid var(--border); background:color-mix(in srgb,var(--panel) 92%, transparent); color:var(--text); display:grid; place-items:center; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.14); }
+.mp-map-scale { position:absolute; bottom:15px; right:22px; display:flex; align-items:flex-end; gap:7px; color:var(--text); font-size:10px; z-index:20; }
+.mp-map-scale div { display:flex; width:105px; height:9px; border-bottom:3px solid var(--text); }.mp-map-scale i { flex:1; border-left:1px solid var(--text); }.mp-map-scale i:last-child { border-right:1px solid var(--text); }
+
+.mp-bottom { height:78px; flex:0 0 78px; display:flex; align-items:stretch; background:var(--panel); border-top:1px solid var(--border); color:var(--text); z-index:90; }
+.mp-bottom-back { width:62px; border:0; border-right:1px solid var(--border); background:transparent; color:var(--text); font-size:32px; cursor:pointer; }
+.mp-bottom-location { width:78px; display:grid; place-items:center; color:var(--route); font-size:13px; font-weight:700; border-right:1px solid var(--border); }
+.mp-bottom-items { flex:1; display:flex; align-items:stretch; justify-content:space-evenly; }
+.mp-bottom-items button { min-width:70px; flex:1; max-width:125px; border:0; background:transparent; color:var(--muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer; font-size:10px; }
+.mp-bottom-items button.active { color:var(--text); }.mp-bottom-items button.active svg { color:var(--route); }
+
+.mp-chart-view,.mp-notes-view { position:absolute; inset:0; display:flex; overflow:hidden; background:var(--bg); }
+.mp-chart-sidebar { width:285px; background:var(--panel); border-right:1px solid var(--border); padding:12px 0; display:flex; flex-direction:column; }
+.mp-chart-airport { padding:3px 14px 12px; border-bottom:1px solid var(--border); }.small-title { font-size:15px; font-weight:750; }.small-sub { color:var(--muted); font-size:9px; margin-top:2px; }
+.mp-filter-row { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:11px 12px 4px; }.mp-filter-row.second { padding-top:4px; }
+.mp-filter-row button,.show-filters { height:33px; border:1px solid var(--border); background:var(--panel2); color:var(--muted); font-size:9px; cursor:pointer; }.mp-filter-row button.active { color:var(--text); border-color:var(--route); }
+.show-filters { margin:5px 12px 13px; width:calc(100% - 24px); }
+.chart-side-title { padding:8px 14px; color:var(--muted); font-size:10px; font-weight:700; text-transform:uppercase; border-top:1px solid var(--border); }.chart-side-title.ground { border-top:0; padding-top:14px; }
+.chart-side-item { height:46px; border:0; border-bottom:1px solid var(--border); background:transparent; color:var(--text); display:flex; align-items:center; justify-content:space-between; padding:0 14px; font-size:10px; cursor:pointer; text-align:left; }.chart-side-item.selected { background:rgba(58,166,224,.12); border-left:3px solid var(--route); padding-left:11px; }
+.chart-bookmark { color:var(--route); }
+.mp-chart-main { flex:1; padding:24px; min-width:0; }.mp-chart-paper { position:relative; height:100%; border:1px solid #727d77; background:#ecefea; overflow:hidden; color:#213229; }
+.chart-heading { position:absolute; top:18px; left:20px; font-weight:800; font-size:15px; }.chart-edition { position:absolute; top:39px; left:20px; font-size:8px; }
+.runway-diagonal,.runway-horizontal { position:absolute; background:#515954; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }.runway-diagonal { height:31px; width:69%; left:16%; }.r1 { top:35%; transform:rotate(-12deg); }.r2 { top:58%; transform:rotate(8deg); }.runway-horizontal { width:53%; height:22px; top:75%; left:27%; }
+.stand-box { position:absolute; width:25px; height:19px; border:1px solid #3b5746; background:#b7c5b9; display:grid; place-items:center; font-size:6px; }.chart-note { position:absolute; color:#48634f; font-size:8px; font-weight:700; }.n-a { right:7%; top:26%; }.n-b { left:30%; top:31%; }.n-c { left:42%; top:67%; }.n-d { right:20%; bottom:15%; }.chart-north { position:absolute; right:20px; top:20px; font-size:14px; font-weight:800; }.chart-footer { position:absolute; left:15px; bottom:10px; font-size:7px; color:#6b756e; }
+
+.mp-notes-sidebar { width:285px; border-right:1px solid var(--border); background:var(--panel); }.notes-top { height:50px; display:flex; align-items:center; gap:25px; padding:0 10px; border-bottom:1px solid var(--border); font-size:12px; }.back-link { border:0; background:transparent; color:var(--text); cursor:pointer; font-size:11px; }.note-entry { min-height:59px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start; padding:12px 12px; }.note-pin { color:var(--muted); font-size:10px; margin-top:2px; }.note-entry strong { display:block; font-size:11px; }.note-entry small { display:block; color:var(--muted); font-size:9px; margin-top:4px; }
+.note-popup { position:absolute; left:380px; top:145px; width:290px; background:#fff; color:#16232b; border-radius:8px; overflow:hidden; box-shadow:0 12px 35px rgba(0,0,0,.25); z-index:50; }.note-popup .popup-title { background:#1027a1; color:#fff; padding:10px 18px; font-weight:700; font-size:12px; }.note-popup .popup-body { padding:18px; font-size:11px; min-height:105px; }.note-popup button { width:100%; height:39px; border:0; background:#1027a1; color:#fff; font-weight:700; }
+
+@media (max-width: 1100px) { .mp-folder { width:320px; min-width:320px; } .mp-bottom-items button { min-width:50px; } }
+@media (max-width: 780px) { .mp-folder { position:absolute; left:0; top:0; bottom:0; width:305px; min-width:305px; box-shadow:9px 0 25px rgba(0,0,0,.25); } .mp-bottom-location { width:58px; }.mp-bottom-items button:nth-child(n+7) { display:none; } }
 `;
-
-document.head.appendChild(style);
