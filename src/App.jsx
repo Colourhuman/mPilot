@@ -8,76 +8,78 @@ import {
   Moon,
   Sun,
   ChevronRight,
-  ChevronDown,
   FileText,
-  Map,
   Route,
   BookOpen,
   StickyNote,
-  Plane,
   Cloud,
   Layers,
   Crosshair,
   Maximize2,
-  Minus,
   Navigation,
   MoreHorizontal,
   X,
   Clock3,
+  MapPinned,
+  Plane,
+  LocateFixed,
 } from "lucide-react";
 
-const C = {
-  bg: "#e8ecef",
-  panel: "#f7f8f9",
-  panel2: "#edf0f2",
-  border: "#cbd1d5",
-  borderDark: "#aeb6bc",
-  text: "#20272c",
-  muted: "#68737b",
-  blue: "#087fbd",
-  blue2: "#dceef8",
-  green: "#3e9861",
-  map: "#dfe5e8",
-};
-
 function App() {
-  const [dark, setDark] = useState(false);
-  const [active, setActive] = useState("folder");
-  const [folderOpen, setFolderOpen] = useState(true);
+  const [dark, setDark] = useState(true);
   const [selectedAirport, setSelectedAirport] = useState(null);
+  const [airportInput, setAirportInput] = useState("");
+  const [activeLevel, setActiveLevel] = useState("LOW");
+  const [mapMode, setMapMode] = useState("route");
+
   const [flight, setFlight] = useState({
-    departure: "",
-    destination: "",
+    departure: "EDDF",
+    destination: "LEPA",
     alternate: "",
   });
 
-  const [airportInput, setAirportInput] = useState("");
-
   const theme = dark
     ? {
-        bg: "#20262a",
-        panel: "#282f34",
-        panel2: "#30383e",
-        border: "#444d54",
-        borderDark: "#59636a",
+        bg: "#15191d",
+        panel: "#20262b",
+        panel2: "#272e34",
+        border: "#394148",
+        borderLight: "#4b555d",
         text: "#edf1f3",
-        muted: "#9ca7ae",
-        blue: "#42a9df",
-        blue2: "#183e52",
-        map: "#252c31",
+        muted: "#8b969e",
+        blue: "#39a9e1",
+        blueDark: "#126f9d",
+        green: "#54a96f",
+        map: "#20272b",
+        map2: "#263035",
+        route: "#38a9e4",
       }
-    : C;
+    : {
+        bg: "#eef1f3",
+        panel: "#f8f9fa",
+        panel2: "#e7ebee",
+        border: "#ccd2d6",
+        borderLight: "#aeb8bf",
+        text: "#20272c",
+        muted: "#69757d",
+        blue: "#087fbd",
+        blueDark: "#086b9c",
+        green: "#3e9861",
+        map: "#dce3e6",
+        map2: "#d4dde1",
+        route: "#1389c7",
+      };
 
   const openAirport = (type) => {
     setSelectedAirport(type);
-    setAirportInput(flight[type]);
+    setAirportInput(flight[type] || "");
   };
 
   const saveAirport = () => {
-    if (!airportInput.trim()) return;
+    if (!airportInput.trim() || !selectedAirport) return;
 
-    setFlight((old) => ({
-      ...old,
+    setFlight((current) => ({
+      ...current,
       [selectedAirport]: airportInput.trim().toUpperCase(),
     }));
 
@@ -85,7 +87,7 @@ function App() {
     setAirportInput("");
   };
 
-  const airportName = {
+  const airportTitle = {
     departure: "Departure",
     destination: "Destination",
     alternate: "Alternate",
@@ -96,10 +98,12 @@ function App() {
       box-sizing: border-box;
     }
 
-    html, body, #root {
-      margin: 0;
+    html,
+    body,
+    #root {
       width: 100%;
       height: 100%;
+      margin: 0;
       overflow: hidden;
     }
 
@@ -123,21 +127,23 @@ function App() {
       height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
       background: ${theme.bg};
       color: ${theme.text};
-      overflow: hidden;
     }
 
-    /* TOP BAR */
+    /* =========================
+       TOP BAR
+    ========================= */
 
     .topbar {
-      height: 54px;
-      min-height: 54px;
+      height: 46px;
+      min-height: 46px;
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      padding: 0 15px;
-      background: ${theme.panel};
+      padding: 0 10px;
+      background: ${theme.bg};
       border-bottom: 1px solid ${theme.border};
       z-index: 100;
     }
@@ -150,31 +156,31 @@ function App() {
     }
 
     .top-left {
-      gap: 14px;
+      gap: 12px;
     }
 
     .top-center {
       gap: 7px;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
     }
 
     .top-right {
       justify-content: flex-end;
-      gap: 12px;
+      gap: 10px;
     }
 
     .top-icon {
-      border: 0;
-      background: transparent;
-      color: ${theme.text};
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      border: 0;
       border-radius: 4px;
+      background: transparent;
+      color: ${theme.text};
+      cursor: pointer;
     }
 
     .top-icon:hover {
@@ -182,20 +188,23 @@ function App() {
     }
 
     .cycle {
-      font-size: 10px;
-      color: ${theme.muted};
+      padding-right: 12px;
       border-right: 1px solid ${theme.border};
-      padding-right: 15px;
+      color: ${theme.muted};
+      font-size: 10px;
+      white-space: nowrap;
     }
 
     .flight-status {
-      font-size: 11px;
       color: ${theme.muted};
+      font-size: 10px;
+      white-space: nowrap;
     }
 
     .profile {
-      font-size: 10px;
       color: ${theme.muted};
+      font-size: 9px;
+      text-transform: lowercase;
     }
 
     .online {
@@ -205,16 +214,20 @@ function App() {
       background: ${theme.green};
     }
 
-    /* MAIN */
+    /* =========================
+       MAIN
+    ========================= */
 
     .workspace {
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: 310px minmax(0, 1fr);
+      grid-template-columns: 270px minmax(0, 1fr);
     }
 
-    /* FLIGHT FOLDER */
+    /* =========================
+       SIDEBAR
+    ========================= */
 
     .sidebar {
       min-width: 0;
@@ -222,71 +235,68 @@ function App() {
       flex-direction: column;
       background: ${theme.panel};
       border-right: 1px solid ${theme.border};
-      z-index: 20;
+      z-index: 30;
     }
 
-    .sidebar-title {
+    .sidebar-header {
       height: 48px;
       min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 8px;
       border-bottom: 1px solid ${theme.border};
-      font-size: 13px;
-      font-weight: 650;
     }
 
-    .sidebar-title-left {
+    .sidebar-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .sidebar-menu {
+      width: 30px;
+      height: 30px;
       display: flex;
       align-items: center;
-      gap: 9px;
+      justify-content: center;
+      border: 0;
+      background: transparent;
+      color: ${theme.muted};
+      cursor: pointer;
     }
 
     .new-flight {
-      margin: 14px 14px 11px;
-      height: 39px;
-      border: 1px solid ${theme.blue};
-      background: ${theme.blue};
-      color: white;
-      border-radius: 3px;
+      height: 40px;
+      margin: 15px 8px 11px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      border: 0;
+      border-radius: 3px;
+      background: ${theme.blue};
+      color: white;
       font-size: 11px;
-      font-weight: 650;
+      font-weight: 700;
       cursor: pointer;
     }
 
     .new-flight:hover {
-      filter: brightness(1.06);
-    }
-
-    .folder-label {
-      height: 31px;
-      padding: 0 15px;
-      display: flex;
-      align-items: center;
-      color: ${theme.muted};
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      filter: brightness(1.08);
     }
 
     .folder-row {
-      min-height: 57px;
+      min-height: 60px;
       display: grid;
-      grid-template-columns: 27px minmax(0, 1fr) 18px;
+      grid-template-columns: 24px minmax(0, 1fr) 18px;
       align-items: center;
       gap: 7px;
-      padding: 7px 15px;
-      border-bottom: 1px solid ${theme.border};
+      padding: 7px 10px;
+      border-top: 1px solid ${theme.border};
       background: transparent;
       color: ${theme.text};
-      cursor: pointer;
       text-align: left;
+      cursor: pointer;
     }
 
     .folder-row:hover {
@@ -306,7 +316,7 @@ function App() {
 
     .row-title {
       font-size: 11px;
-      font-weight: 650;
+      font-weight: 700;
     }
 
     .row-value {
@@ -317,24 +327,18 @@ function App() {
       text-overflow: ellipsis;
     }
 
-    .folder-divider {
-      height: 9px;
-      background: ${theme.panel2};
-      border-bottom: 1px solid ${theme.border};
-    }
-
     .simple-row {
-      min-height: 49px;
+      min-height: 52px;
       display: grid;
-      grid-template-columns: 27px 1fr 18px;
+      grid-template-columns: 24px minmax(0, 1fr) 18px;
       align-items: center;
-      padding: 0 15px;
       gap: 7px;
-      border-bottom: 1px solid ${theme.border};
+      padding: 0 10px;
+      border-top: 1px solid ${theme.border};
       background: transparent;
       color: ${theme.text};
-      cursor: pointer;
       text-align: left;
+      cursor: pointer;
     }
 
     .simple-row:hover {
@@ -343,7 +347,7 @@ function App() {
 
     .simple-row span {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 650;
     }
 
     .sidebar-bottom {
@@ -356,22 +360,35 @@ function App() {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 15px;
-      font-size: 9px;
+      padding: 0 9px;
       color: ${theme.muted};
+      font-size: 9px;
     }
 
     .valid {
       color: ${theme.green};
-      font-weight: 650;
+      font-weight: 700;
     }
 
-    /* MAP */
+    .ready {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 9px;
+      border-top: 1px solid ${theme.border};
+      color: ${theme.green};
+      font-size: 9px;
+    }
+
+    /* =========================
+       MAP
+    ========================= */
 
     .map {
+      position: relative;
       min-width: 0;
       min-height: 0;
-      position: relative;
       overflow: hidden;
       background: ${theme.map};
     }
@@ -379,236 +396,316 @@ function App() {
     .map-background {
       position: absolute;
       inset: 0;
-      overflow: hidden;
       background:
         radial-gradient(
           ellipse at 25% 20%,
-          rgba(255,255,255,.55),
-          transparent 35%
+          rgba(80, 110, 120, .17),
+          transparent 36%
         ),
         radial-gradient(
           ellipse at 75% 75%,
-          rgba(255,255,255,.45),
-          transparent 35%
+          rgba(70, 100, 110, .13),
+          transparent 38%
         ),
         ${theme.map};
     }
 
-    .dark-map {
-      background:
-        radial-gradient(
-          ellipse at 25% 20%,
-          rgba(255,255,255,.035),
-          transparent 35%
-        ),
-        radial-gradient(
-          ellipse at 75% 75%,
-          rgba(255,255,255,.025),
-          transparent 35%
-        ),
-        ${theme.map};
-    }
+    /* grid */
 
-    /* decorative geographical shapes */
-
-    .land {
-      position: absolute;
-      opacity: .38;
-      filter: blur(.2px);
-    }
-
-    .land-1 {
-      width: 520px;
-      height: 350px;
-      left: 6%;
-      top: 7%;
-      border-radius: 48% 52% 41% 59%;
-      background: rgba(255,255,255,.33);
-      transform: rotate(-11deg);
-    }
-
-    .land-2 {
-      width: 400px;
-      height: 280px;
-      right: 5%;
-      bottom: 8%;
-      border-radius: 52% 48% 61% 39%;
-      background: rgba(255,255,255,.25);
-      transform: rotate(17deg);
-    }
-
-    .grid {
+    .map-grid {
       position: absolute;
       inset: 0;
+      opacity: ${dark ? ".48" : ".65"};
       background-image:
         linear-gradient(
-          rgba(75,88,96,.15) 1px,
+          rgba(125, 145, 153, .16) 1px,
           transparent 1px
         ),
         linear-gradient(
           90deg,
-          rgba(75,88,96,.15) 1px,
+          rgba(125, 145, 153, .16) 1px,
           transparent 1px
         );
-      background-size: 95px 95px;
+      background-size: 86px 86px;
       pointer-events: none;
     }
 
-    .dark-map .grid {
-      background-image:
-        linear-gradient(
-          rgba(220,230,235,.07) 1px,
-          transparent 1px
-        ),
-        linear-gradient(
-          90deg,
-          rgba(220,230,235,.07) 1px,
-          transparent 1px
-        );
-    }
+    /* simplified chart geography */
 
-    .coordinate {
+    .region {
       position: absolute;
-      color: ${theme.muted};
-      opacity: .6;
-      font-size: 8px;
-      font-family: monospace;
+      border: 1px solid rgba(106, 144, 127, .42);
+      background: rgba(100, 130, 120, .025);
+      pointer-events: none;
     }
 
-    .coord-1 { left: 12%; top: 19%; }
-    .coord-2 { left: 47%; top: 22%; }
-    .coord-3 { left: 75%; top: 17%; }
-    .coord-4 { left: 20%; top: 65%; }
-    .coord-5 { left: 60%; top: 71%; }
+    .region-1 {
+      width: 35%;
+      height: 48%;
+      left: -4%;
+      top: 8%;
+      border-radius: 50% 35% 60% 30%;
+      transform: rotate(-8deg);
+    }
+
+    .region-2 {
+      width: 32%;
+      height: 55%;
+      left: 25%;
+      top: -13%;
+      border-radius: 30% 60% 40% 55%;
+      transform: rotate(13deg);
+    }
+
+    .region-3 {
+      width: 35%;
+      height: 50%;
+      right: -8%;
+      top: 20%;
+      border-radius: 60% 30% 50% 35%;
+      transform: rotate(-12deg);
+    }
+
+    .region-4 {
+      width: 38%;
+      height: 45%;
+      right: 12%;
+      bottom: -16%;
+      border-radius: 40% 60% 35% 55%;
+      transform: rotate(11deg);
+    }
+
+    /* chart boundaries */
+
+    .fir-line {
+      position: absolute;
+      height: 1px;
+      background: rgba(90, 135, 105, .48);
+      transform-origin: left center;
+      pointer-events: none;
+    }
+
+    .fir-1 {
+      width: 45%;
+      left: 8%;
+      top: 29%;
+      transform: rotate(8deg);
+    }
+
+    .fir-2 {
+      width: 50%;
+      left: 35%;
+      top: 62%;
+      transform: rotate(-13deg);
+    }
+
+    .fir-3 {
+      width: 42%;
+      left: 52%;
+      top: 25%;
+      transform: rotate(22deg);
+    }
+
+    .fir-label {
+      position: absolute;
+      color: rgba(85, 120, 100, .68);
+      font-size: 8px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .fir-label-1 {
+      left: 19%;
+      top: 31%;
+    }
+
+    .fir-label-2 {
+      left: 54%;
+      top: 60%;
+    }
+
+    .fir-label-3 {
+      right: 15%;
+      top: 29%;
+    }
+
+    /* cities */
 
     .city {
       position: absolute;
-      color: ${theme.text};
-      opacity: .65;
+      color: ${theme.muted};
+      opacity: .72;
       font-size: 9px;
       font-weight: 650;
       letter-spacing: .04em;
-    }
-
-    .city-1 { left: 18%; top: 28%; }
-    .city-2 { left: 42%; top: 48%; }
-    .city-3 { left: 70%; top: 29%; }
-    .city-4 { left: 76%; top: 60%; }
-
-    /* ROUTE */
-
-    .route {
-      position: absolute;
-      left: 22%;
-      top: 35%;
-      width: 56%;
-      height: 32%;
       pointer-events: none;
     }
 
-    .route-segment {
+    .city-1 {
+      left: 22%;
+      top: 28%;
+    }
+
+    .city-2 {
+      left: 48%;
+      top: 45%;
+    }
+
+    .city-3 {
+      right: 22%;
+      top: 31%;
+    }
+
+    .city-4 {
+      right: 18%;
+      bottom: 29%;
+    }
+
+    /* =========================
+       ROUTE
+    ========================= */
+
+    .route-layer {
       position: absolute;
-      height: 2px;
-      background: ${theme.text};
+      inset: 0;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    .route-line {
+      position: absolute;
+      height: 3px;
+      background: ${theme.route};
       transform-origin: left center;
-      box-shadow: 0 0 1px rgba(0,0,0,.5);
+      box-shadow: 0 0 4px rgba(20, 145, 205, .3);
     }
 
-    .segment-a {
-      width: 35%;
-      left: 0;
-      top: 25%;
-      transform: rotate(18deg);
-    }
-
-    .segment-b {
-      width: 37%;
-      left: 32%;
-      top: 47%;
+    .route-a {
+      width: 38%;
+      left: 20%;
+      top: 31%;
       transform: rotate(26deg);
     }
 
-    .segment-c {
-      width: 32%;
-      left: 67%;
-      top: 72%;
-      transform: rotate(12deg);
+    .route-b {
+      width: 35%;
+      left: 47%;
+      top: 48%;
+      transform: rotate(39deg);
+    }
+
+    .route-c {
+      width: 17%;
+      left: 70%;
+      top: 70%;
+      transform: rotate(7deg);
     }
 
     .route-point {
       position: absolute;
       width: 8px;
       height: 8px;
-      border: 2px solid ${theme.text};
-      background: ${theme.panel};
+      border: 2px solid ${theme.route};
+      border-radius: 50%;
+      background: ${theme.map};
       transform: translate(-50%, -50%);
     }
 
-    .point-a { left: 0; top: 25%; }
-    .point-b { left: 32%; top: 47%; }
-    .point-c { left: 67%; top: 72%; }
-    .point-d { left: 99%; top: 78%; }
+    .route-point-1 {
+      left: 20%;
+      top: 31%;
+    }
 
-    .route-label {
+    .route-point-2 {
+      left: 47%;
+      top: 48%;
+    }
+
+    .route-point-3 {
+      left: 70%;
+      top: 70%;
+    }
+
+    .route-point-4 {
+      left: 87%;
+      top: 72%;
+    }
+
+    .waypoint {
       position: absolute;
-      transform: translate(-50%, -50%);
+      color: ${theme.text};
       font-size: 8px;
       font-weight: 700;
-      color: ${theme.text};
-      background: rgba(235,240,242,.7);
-      padding: 2px 3px;
+      background: ${dark ? "rgba(31,39,43,.8)" : "rgba(230,237,239,.85)"};
+      padding: 2px 4px;
+      border-radius: 2px;
+      z-index: 10;
     }
 
-    .dark-map .route-label {
-      background: rgba(30,36,40,.72);
+    .waypoint-1 {
+      left: 34%;
+      top: 38%;
     }
 
-    .route-label-a { left: 0; top: 17%; }
-    .route-label-b { left: 32%; top: 39%; }
-    .route-label-c { left: 67%; top: 64%; }
-    .route-label-d { left: 99%; top: 70%; }
+    .waypoint-2 {
+      left: 52%;
+      top: 51%;
+    }
 
-    /* AIRPORT MARKERS */
+    .waypoint-3 {
+      left: 69%;
+      top: 64%;
+    }
 
-    .airport {
+    /* =========================
+       PIN MARKERS
+    ========================= */
+
+    .airport-marker {
       position: absolute;
-      z-index: 12;
-      transform: translate(-50%, -50%);
-    }
-
-    .airport-symbol {
-      width: 22px;
-      height: 22px;
+      z-index: 25;
+      transform: translate(-50%, -100%);
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 11px;
-      font-weight: 800;
-      background: ${theme.blue};
-      clip-path: polygon(
-        50% 0%,
-        61% 35%,
-        100% 43%,
-        100% 58%,
-        61% 55%,
-        57% 100%,
-        43% 100%,
-        39% 55%,
-        0% 58%,
-        0% 43%,
-        39% 35%
-      );
+      gap: 6px;
     }
 
-    .airport-code {
+    .pin {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      border-radius: 50% 50% 50% 0;
+      background: ${theme.blue};
+      transform: rotate(-45deg);
+      box-shadow:
+        0 2px 5px rgba(0, 0, 0, .35),
+        0 0 0 1px rgba(255,255,255,.08);
+    }
+
+    .pin::after {
+      content: "";
       position: absolute;
-      left: 27px;
-      top: 4px;
-      font-size: 10px;
-      font-weight: 750;
-      white-space: nowrap;
+      width: 6px;
+      height: 6px;
+      left: 6px;
+      top: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .pin-label {
+      padding: 2px 4px;
+      border-radius: 2px;
+      background: ${
+        dark ? "rgba(24, 30, 34, .88)" : "rgba(245,248,249,.9)"
+      };
       color: ${theme.text};
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,.18);
     }
 
     .departure-marker {
@@ -617,34 +714,36 @@ function App() {
     }
 
     .destination-marker {
-      left: 80%;
+      left: 87%;
       top: 72%;
     }
 
-    /* MAP CONTROLS */
+    /* =========================
+       MAP CONTROLS
+    ========================= */
 
     .map-tools {
       position: absolute;
-      right: 15px;
-      top: 15px;
-      z-index: 30;
+      right: 12px;
+      top: 12px;
+      z-index: 50;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .map-tool {
-      width: 36px;
-      height: 36px;
-      border: 1px solid ${theme.border};
-      background: ${theme.panel};
-      color: ${theme.text};
-      border-radius: 3px;
+      width: 38px;
+      height: 38px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid ${theme.border};
+      border-radius: 3px;
+      background: ${theme.panel};
+      color: ${theme.text};
       cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,.12);
+      box-shadow: 0 2px 5px rgba(0,0,0,.16);
     }
 
     .map-tool:hover {
@@ -653,144 +752,127 @@ function App() {
 
     .map-info {
       position: absolute;
-      left: 15px;
-      top: 15px;
-      z-index: 30;
-      background: ${theme.panel};
+      left: 13px;
+      top: 13px;
+      z-index: 45;
+      min-width: 150px;
+      padding: 8px 10px;
       border: 1px solid ${theme.border};
-      padding: 9px 11px;
-      min-width: 160px;
-      box-shadow: 0 2px 5px rgba(0,0,0,.1);
+      border-radius: 3px;
+      background: ${
+        dark ? "rgba(29,36,40,.9)" : "rgba(248,250,251,.9)"
+      };
+      box-shadow: 0 2px 7px rgba(0,0,0,.14);
     }
 
     .map-info-title {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 750;
     }
 
     .map-info-sub {
-      color: ${theme.muted};
-      font-size: 9px;
       margin-top: 3px;
+      color: ${theme.muted};
+      font-size: 8px;
     }
 
-    /* BOTTOM MAP BAR */
+    /* =========================
+       BOTTOM MAP BAR
+    ========================= */
 
     .map-bottom {
       position: absolute;
-      bottom: 0;
       left: 0;
       right: 0;
-      height: 50px;
-      background: ${theme.panel};
-      border-top: 1px solid ${theme.border};
-      z-index: 40;
+      bottom: 0;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 13px;
+      padding: 0 10px;
+      background: ${theme.panel};
+      border-top: 1px solid ${theme.border};
+      z-index: 60;
     }
 
     .level-control {
       display: flex;
-      gap: 3px;
+      gap: 2px;
     }
 
     .level {
-      height: 29px;
-      min-width: 52px;
+      min-width: 48px;
+      height: 28px;
       border: 1px solid transparent;
       background: transparent;
       color: ${theme.muted};
       font-size: 9px;
-      font-weight: 750;
+      font-weight: 800;
       cursor: pointer;
     }
 
     .level.active {
-      color: ${theme.blue};
       border-color: ${theme.blue};
-      background: ${theme.blue2};
+      background: ${
+        dark ? "rgba(38,139,187,.18)" : "rgba(8,127,189,.1)"
+      };
+      color: ${theme.blue};
     }
 
     .bottom-actions {
       display: flex;
-      gap: 5px;
+      gap: 4px;
     }
 
     .bottom-action {
       width: 34px;
       height: 31px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: ${theme.muted};
       display: flex;
       align-items: center;
       justify-content: center;
+      border: 1px solid transparent;
+      background: transparent;
+      color: ${theme.muted};
       cursor: pointer;
     }
 
+    .bottom-action:hover,
     .bottom-action.active {
       color: ${theme.blue};
       border-color: ${theme.blue};
-      background: ${theme.blue2};
+      background: ${
+        dark ? "rgba(38,139,187,.16)" : "rgba(8,127,189,.08)"
+      };
     }
 
-    /* FOOTER */
-
-    .footer {
-      height: 30px;
-      min-height: 30px;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      padding: 0 14px;
-      background: ${theme.panel};
-      border-top: 1px solid ${theme.border};
-      color: ${theme.muted};
-      font-size: 9px;
-    }
-
-    .footer-left,
-    .footer-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .footer-right {
-      justify-content: flex-end;
-    }
-
-    .ready {
-      color: ${theme.green};
-    }
-
-    /* MODAL */
+    /* =========================
+       MODAL
+    ========================= */
 
     .overlay {
       position: fixed;
       inset: 0;
       z-index: 500;
-      background: rgba(0,0,0,.32);
       display: flex;
       align-items: center;
       justify-content: center;
+      background: rgba(0,0,0,.45);
     }
 
     .dialog {
-      width: min(400px, calc(100vw - 30px));
+      width: min(390px, calc(100vw - 30px));
       background: ${theme.panel};
       border: 1px solid ${theme.border};
-      box-shadow: 0 10px 35px rgba(0,0,0,.2);
+      border-radius: 3px;
+      box-shadow: 0 15px 45px rgba(0,0,0,.35);
     }
 
     .dialog-head {
-      height: 47px;
+      height: 46px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 15px;
+      padding: 0 13px;
       border-bottom: 1px solid ${theme.border};
     }
 
@@ -798,29 +880,43 @@ function App() {
       font-size: 12px;
     }
 
+    .dialog-close {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      background: transparent;
+      color: ${theme.muted};
+      cursor: pointer;
+    }
+
     .dialog-body {
-      padding: 18px;
+      padding: 17px;
     }
 
     .dialog-label {
       display: block;
+      margin-bottom: 7px;
       color: ${theme.muted};
       font-size: 9px;
-      font-weight: 700;
-      margin-bottom: 7px;
+      font-weight: 750;
       text-transform: uppercase;
+      letter-spacing: .05em;
     }
 
     .airport-input {
       width: 100%;
-      height: 39px;
-      border: 1px solid ${theme.borderDark};
+      height: 40px;
+      padding: 0 10px;
+      outline: none;
+      border: 1px solid ${theme.borderLight};
+      border-radius: 2px;
       background: ${theme.bg};
       color: ${theme.text};
-      outline: none;
-      padding: 0 11px;
       font-size: 12px;
-      font-weight: 650;
+      font-weight: 700;
       text-transform: uppercase;
     }
 
@@ -829,31 +925,30 @@ function App() {
     }
 
     .dialog-button {
-      margin-top: 13px;
       width: 100%;
-      height: 39px;
+      height: 40px;
+      margin-top: 13px;
       border: 0;
+      border-radius: 2px;
       background: ${theme.blue};
       color: white;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 750;
       cursor: pointer;
     }
 
-    /* TABLET */
+    /* =========================
+       RESPONSIVE
+    ========================= */
 
     @media (max-width: 850px) {
       .workspace {
-        grid-template-columns: 270px minmax(0, 1fr);
+        grid-template-columns: 245px minmax(0, 1fr);
       }
 
       .flight-status,
       .profile {
         display: none;
-      }
-
-      .cycle {
-        border: 0;
       }
     }
 
@@ -873,6 +968,10 @@ function App() {
       .top-center {
         justify-content: center;
       }
+
+      .cycle {
+        border: 0;
+      }
     }
   `;
 
@@ -881,30 +980,40 @@ function App() {
       <style>{css}</style>
 
       <div className="mpilot">
-        {/* TOP BAR */}
+
+        {/* =========================
+            TOP BAR
+        ========================= */}
+
         <header className="topbar">
+
           <div className="top-left">
+
             <button className="top-icon">
-              <Menu size={20} />
+              <Menu size={19} />
             </button>
 
-            <span className="cycle">AIRAC 1807</span>
+            <span className="cycle">
+              AIRAC 1807
+            </span>
 
             <span className="flight-status">
               {flight.departure && flight.destination
                 ? `${flight.departure} → ${flight.destination}`
-                : "No flight loaded"}
+                : "Route not saved"}
             </span>
+
           </div>
 
           <div className="top-center">
-            <Clock3 size={15} />
-            <span>00:00 UTC</span>
+            <Clock3 size={14} />
+            <span>00:00</span>
           </div>
 
           <div className="top-right">
+
             <button className="top-icon">
-              <HelpCircle size={18} />
+              <HelpCircle size={17} />
             </button>
 
             <button
@@ -912,27 +1021,45 @@ function App() {
               onClick={() => setDark(!dark)}
               title="Day / Night"
             >
-              {dark ? <Sun size={18} /> : <Moon size={18} />}
+              {dark ? (
+                <Sun size={17} />
+              ) : (
+                <Moon size={17} />
+              )}
             </button>
 
-            <span className="profile">DEFAULT</span>
+            <span className="profile">
+              default
+            </span>
+
             <span className="online" />
+
           </div>
+
         </header>
 
-        {/* WORKSPACE */}
-        <div className="workspace">
-          {/* FLIGHT FOLDER */}
-          <aside className="sidebar">
-            <div className="sidebar-title">
-              <div className="sidebar-title-left">
-                <BookOpen size={16} />
-                <span>Flight Folder</span>
-              </div>
+        {/* =========================
+            WORKSPACE
+        ========================= */}
 
-              <button className="top-icon">
+        <div className="workspace">
+
+          {/* =========================
+              FLIGHT FOLDER
+          ========================= */}
+
+          <aside className="sidebar">
+
+            <div className="sidebar-header">
+
+              <span className="sidebar-title">
+                Flight Folder
+              </span>
+
+              <button className="sidebar-menu">
                 <MoreHorizontal size={18} />
               </button>
+
             </div>
 
             <button
@@ -945,23 +1072,21 @@ function App() {
                 })
               }
             >
-              <Plus size={16} />
-              NEW FLIGHT
+              <Plus size={15} />
+              New Flight
             </button>
 
-            <div className="folder-label">
-              Flight Data
-            </div>
-
-            {/* Departure */}
             <button
               className="folder-row"
               onClick={() => openAirport("departure")}
             >
-              <MapPinIcon />
+              <MapPinned size={17} />
 
               <div className="row-content">
-                <span className="row-title">Departure</span>
+                <span className="row-title">
+                  Departure
+                </span>
+
                 <span className="row-value">
                   {flight.departure || "Add Departure"}
                 </span>
@@ -970,15 +1095,17 @@ function App() {
               <ChevronRight size={15} />
             </button>
 
-            {/* Destination */}
             <button
               className="folder-row"
               onClick={() => openAirport("destination")}
             >
-              <MapPinIcon />
+              <MapPinned size={17} />
 
               <div className="row-content">
-                <span className="row-title">Destination</span>
+                <span className="row-title">
+                  Destination
+                </span>
+
                 <span className="row-value">
                   {flight.destination || "Add Destination"}
                 </span>
@@ -987,15 +1114,17 @@ function App() {
               <ChevronRight size={15} />
             </button>
 
-            {/* Alternate */}
             <button
               className="folder-row"
               onClick={() => openAirport("alternate")}
             >
-              <MapPinIcon />
+              <MapPinned size={17} />
 
               <div className="row-content">
-                <span className="row-title">Alternate</span>
+                <span className="row-title">
+                  Alternate
+                </span>
+
                 <span className="row-value">
                   {flight.alternate || "Add Alternate"}
                 </span>
@@ -1004,300 +1133,340 @@ function App() {
               <ChevronRight size={15} />
             </button>
 
-            <div className="folder-divider" />
-
-            <div className="folder-label">
-              Flight Content
-            </div>
-
-            <button
-              className="simple-row"
-              onClick={() => setActive("documents")}
-            >
+            <button className="simple-row">
               <FileText size={16} />
               <span>Documents</span>
               <ChevronRight size={15} />
             </button>
 
-            <button
-              className="simple-row"
-              onClick={() => setActive("route")}
-            >
-              <Route size={16} />
-              <span>Route</span>
-              <ChevronRight size={15} />
-            </button>
-
-            <button
-              className="simple-row"
-              onClick={() => setActive("notes")}
-            >
+            <button className="simple-row">
               <StickyNote size={16} />
               <span>Route Notes</span>
               <ChevronRight size={15} />
             </button>
 
-            <div className="folder-divider" />
-
-            <button
-              className="simple-row"
-              onClick={() => setActive("weather")}
-            >
-              <Cloud size={16} />
-              <span>Weather</span>
-              <ChevronRight size={15} />
-            </button>
-
-            <button
-              className="simple-row"
-              onClick={() => setActive("map")}
-            >
-              <Layers size={16} />
-              <span>Map Layers</span>
-              <ChevronRight size={15} />
-            </button>
-
             <div className="sidebar-bottom">
+
               <div className="validity">
-                <span>Database</span>
-                <span className="valid">UP TO DATE</span>
+                <span>Validity</span>
+                <span className="valid">
+                  Up to date
+                </span>
               </div>
+
+              <div className="ready">
+                <span>●</span>
+                <span>Ready</span>
+              </div>
+
             </div>
+
           </aside>
 
-          {/* MAP */}
-          <section className="map">
-            <div className={`map-background ${dark ? "dark-map" : ""}`}>
-              <div className="land land-1" />
-              <div className="land land-2" />
+          {/* =========================
+              MAP
+          ========================= */}
 
-              <div className="grid" />
+          <main className="map">
 
-              <span className="coordinate coord-1">
-                52°N 004°E
+            <div className="map-background" />
+
+            <div className="map-grid" />
+
+            {/* simplified chart regions */}
+
+            <div className="region region-1" />
+            <div className="region region-2" />
+            <div className="region region-3" />
+            <div className="region region-4" />
+
+            {/* FIR boundaries */}
+
+            <div className="fir-line fir-1" />
+            <div className="fir-line fir-2" />
+            <div className="fir-line fir-3" />
+
+            <span className="fir-label fir-label-1">
+              LONDON FIR
+            </span>
+
+            <span className="fir-label fir-label-2">
+              SWISS FIR
+            </span>
+
+            <span className="fir-label fir-label-3">
+              GERMANY FIR
+            </span>
+
+            {/* cities */}
+
+            <span className="city city-1">
+              LONDON
+            </span>
+
+            <span className="city city-2">
+              PARIS
+            </span>
+
+            <span className="city city-3">
+              BERLIN
+            </span>
+
+            <span className="city city-4">
+              MÜNCHEN
+            </span>
+
+            {/* route */}
+
+            <div className="route-layer">
+
+              <div className="route-line route-a" />
+              <div className="route-line route-b" />
+              <div className="route-line route-c" />
+
+              <div className="route-point route-point-1" />
+              <div className="route-point route-point-2" />
+              <div className="route-point route-point-3" />
+              <div className="route-point route-point-4" />
+
+              <span className="waypoint waypoint-1">
+                KPT
               </span>
-              <span className="coordinate coord-2">
-                51°N 010°E
-              </span>
-              <span className="coordinate coord-3">
-                52°N 016°E
-              </span>
-              <span className="coordinate coord-4">
-                48°N 006°E
-              </span>
-              <span className="coordinate coord-5">
-                47°N 013°E
+
+              <span className="waypoint waypoint-2">
+                ROKIL
               </span>
 
-              <span className="city city-1">AMSTERDAM</span>
-              <span className="city city-2">FRANKFURT</span>
-              <span className="city city-3">BERLIN</span>
-              <span className="city city-4">MUNICH</span>
+              <span className="waypoint waypoint-3">
+                LAMSI
+              </span>
 
-              {/* Route */}
-              <div className="route">
-                <span className="route-segment segment-a" />
-                <span className="route-segment segment-b" />
-                <span className="route-segment segment-c" />
-
-                <span className="route-point point-a" />
-                <span className="route-point point-b" />
-                <span className="route-point point-c" />
-                <span className="route-point point-d" />
-
-                <span className="route-label route-label-a">
-                  {flight.departure || "EDDL"}
-                </span>
-
-                <span className="route-label route-label-b">
-                  DODEN
-                </span>
-
-                <span className="route-label route-label-c">
-                  RUDNO
-                </span>
-
-                <span className="route-label route-label-d">
-                  {flight.destination || "LEPA"}
-                </span>
-              </div>
-
-              {/* Airport markers */}
-              <div className="airport departure-marker">
-                <div className="airport-symbol">
-                  <Plane size={14} />
-                </div>
-                <span className="airport-code">
-                  {flight.departure || "EDDL"}
-                </span>
-              </div>
-
-              <div className="airport destination-marker">
-                <div className="airport-symbol">
-                  <Plane size={14} />
-                </div>
-                <span className="airport-code">
-                  {flight.destination || "LEPA"}
-                </span>
-              </div>
             </div>
 
-            {/* MAP INFO */}
+            {/* =========================
+                AIRPORT PINS
+            ========================= */}
+
+            {flight.departure && (
+              <div className="airport-marker departure-marker">
+
+                <div className="pin" />
+
+                <span className="pin-label">
+                  {flight.departure}
+                </span>
+
+              </div>
+            )}
+
+            {flight.destination && (
+              <div className="airport-marker destination-marker">
+
+                <div className="pin" />
+
+                <span className="pin-label">
+                  {flight.destination}
+                </span>
+
+              </div>
+            )}
+
+            {/* =========================
+                MAP INFO
+            ========================= */}
+
             <div className="map-info">
+
               <div className="map-info-title">
-                mPilot Navigation
+                {activeLevel === "LOW"
+                  ? "LOW ENROUTE"
+                  : "HIGH ENROUTE"}
               </div>
+
               <div className="map-info-sub">
-                {flight.departure && flight.destination
-                  ? `${flight.departure} — ${flight.destination}`
-                  : "No flight selected"}
+                {flight.departure || "----"} →{" "}
+                {flight.destination || "----"}
               </div>
+
             </div>
 
-            {/* MAP TOOLS */}
+            {/* =========================
+                RIGHT MAP CONTROLS
+            ========================= */}
+
             <div className="map-tools">
+
               <button className="map-tool">
                 <Search size={17} />
               </button>
 
               <button className="map-tool">
-                <Crosshair size={17} />
-              </button>
-
-              <button className="map-tool">
-                <Plus size={17} />
-              </button>
-
-              <button className="map-tool">
-                <Minus size={17} />
-              </button>
-
-              <button className="map-tool">
-                <Maximize2 size={17} />
-              </button>
-
-              <button className="map-tool">
                 <Settings size={17} />
               </button>
+
+              <button
+                className="map-tool"
+                onClick={() => setMapMode("route")}
+              >
+                <Navigation size={17} />
+              </button>
+
+              <button
+                className="map-tool"
+                onClick={() => setMapMode("position")}
+              >
+                <LocateFixed size={17} />
+              </button>
+
             </div>
 
-            {/* MAP BOTTOM */}
+            {/* =========================
+                BOTTOM BAR
+            ========================= */}
+
             <div className="map-bottom">
+
               <div className="level-control">
-                <button className="level active">
+
+                <button
+                  className={`level ${
+                    activeLevel === "LOW"
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() => setActiveLevel("LOW")}
+                >
                   LOW
                 </button>
 
-                <button className="level">
+                <button
+                  className={`level ${
+                    activeLevel === "HIGH"
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() => setActiveLevel("HIGH")}
+                >
                   HIGH
                 </button>
+
               </div>
 
               <div className="bottom-actions">
-                <button className="bottom-action active">
-                  <Map size={17} />
-                </button>
 
                 <button className="bottom-action">
-                  <Route size={17} />
+                  <FileText size={17} />
                 </button>
 
-                <button className="bottom-action">
-                  <Cloud size={17} />
+                <button
+                  className={`bottom-action ${
+                    mapMode === "position"
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setMapMode("position")
+                  }
+                >
+                  <Crosshair size={17} />
                 </button>
 
                 <button className="bottom-action">
                   <Layers size={17} />
                 </button>
+
+                <button
+                  className={`bottom-action ${
+                    mapMode === "route"
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() =>
+                    setMapMode("route")
+                  }
+                >
+                  <MapPinned size={17} />
+                </button>
+
+                <button className="bottom-action">
+                  <Settings size={17} />
+                </button>
+
               </div>
+
             </div>
-          </section>
+
+          </main>
+
         </div>
 
-        {/* FOOTER */}
-        <footer className="footer">
-          <div className="footer-left">
-            <span className="ready">●</span>
-            <span>Ready</span>
-          </div>
+        {/* =========================
+            AIRPORT DIALOG
+        ========================= */}
 
-          <span>
-            {flight.departure && flight.destination
-              ? `${flight.departure} → ${flight.destination}`
-              : "No flight loaded"}
-          </span>
-
-          <div className="footer-right">
-            <span>mPilot</span>
-          </div>
-        </footer>
-
-        {/* AIRPORT DIALOG */}
         {selectedAirport && (
           <div className="overlay">
+
             <div className="dialog">
+
               <div className="dialog-head">
+
                 <strong>
-                  Add {airportName[selectedAirport]}
+                  {airportTitle[selectedAirport]}
                 </strong>
 
                 <button
-                  className="top-icon"
-                  onClick={() => setSelectedAirport(null)}
+                  className="dialog-close"
+                  onClick={() => {
+                    setSelectedAirport(null);
+                    setAirportInput("");
+                  }}
                 >
-                  <X size={18} />
+                  <X size={17} />
                 </button>
+
               </div>
 
               <div className="dialog-body">
+
                 <label className="dialog-label">
-                  ICAO Airport Code
+                  ICAO Airport
                 </label>
 
                 <input
                   className="airport-input"
                   value={airportInput}
-                  onChange={(e) =>
-                    setAirportInput(e.target.value)
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveAirport();
-                  }}
-                  placeholder="EDDL"
                   maxLength={4}
                   autoFocus
+                  placeholder="EDDF"
+                  onChange={(event) =>
+                    setAirportInput(
+                      event.target.value.toUpperCase()
+                    )
+                  }
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      saveAirport();
+                    }
+                  }}
                 />
 
                 <button
                   className="dialog-button"
                   onClick={saveAirport}
                 >
-                  ADD {airportName[selectedAirport].toUpperCase()}
+                  LOAD AIRPORT
                 </button>
+
               </div>
+
             </div>
+
           </div>
         )}
+
       </div>
     </>
-  );
-}
-
-function MapPinIcon() {
-  return (
-    <svg
-      width="17"
-      height="17"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
-      <circle cx="12" cy="10" r="2.5" />
-    </svg>
   );
 }
 
